@@ -1,0 +1,35 @@
+# Pythonキャッシュファイル
+__pycache__/
+*.py[cod]
+
+# Jupyter Notebookチェックポイント
+.ipynb_checkpoints/
+
+# VSCode関連ファイル
+.vscode/
+*.code-workspace
+
+# MacOSの不要ファイル
+.DS_Store
+
+# モデルチェックポイントと学習結果
+outputs/
+
+# モデルチェックポイントと学習結果
+outputs/checkpoints/
+outputs/logs/
+
+# 環境関連ファイル
+.env
+*.env
+
+# 仮想環境のディレクトリ（仮想環境をプロジェクト内に置いている場合）
+venv/
+env/
+
+# Pythonのパッケージをインストールしたフォルダ
+pip-wheel-metadata/
+
+# 生データと前処理済みデータのみ無視
+data/raw/
+data/processed/
