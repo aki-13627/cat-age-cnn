@@ -33,3 +33,5 @@ pip-wheel-metadata/
 # 生データと前処理済みデータのみ無視
 data/raw/
 data/processed/
+data/processed-for-cnn/
+data/filename-age.csv
