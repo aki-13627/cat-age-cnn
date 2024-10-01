@@ -1,5 +1,6 @@
 import sys
 sys.path.append('/Users/akihiro/cat-age-cnn')
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -79,7 +80,9 @@ def train_model(model, criterion, optimizer, num_epochs=25):
 model_ft = train_model(model_ft, criterion, optimizer_ft, num_epochs=25)
 
 
-def plot_training():
+
+def plot_training(epoch):
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
     plt.plot(train_loss_history, label="Train Loss")
@@ -88,10 +91,16 @@ def plot_training():
     plt.ylabel("Loss")
     plt.legend()
 
-    plt.savefig("outputs/logs/training_curve.png")
+    filename = f"outputs/logs/training_curve_epoch_{epoch}_{timestamp}.png"
+    plt.savefig(filename)
     plt.show()
+
+    print(f"Training curve saved: {filename}")
 
 
 plot_training()
+
+torch.save(model_ft.state_dict(), 'outputs/checkpoints/resnet_cat_age.pth')
+print("モデルが保存されました")
 
 print("トレーニング完了！")
