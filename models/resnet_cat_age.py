@@ -98,9 +98,17 @@ def plot_training(epoch):
     print(f"Training curve saved: {filename}")
 
 
-plot_training()
+plot_training(epoch=25)
 
-torch.save(model_ft.state_dict(), 'outputs/checkpoints/resnet_cat_age.pth')
-print("モデルが保存されました")
+def save_model_with_timestamp(model, directory="outputs/checkpoints"):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    checkpoint_path = os.path.join(directory, f"resnet_cat_age_{timestamp}.pth")
+    torch.save(model.state_dict(), checkpoint_path)
+    print(f"モデルが保存されました: {checkpoint_path}")
+
+save_model_with_timestamp(model_ft)
 
 print("トレーニング完了！")
