@@ -4,12 +4,13 @@ import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim.lr_scheduler import StepLR
 from torchvision import models
 from data.dataloader import train_dataloader, val_dataloader
 import os
 import matplotlib.pyplot as plt
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("mps")
 
 dataset_sizes = {
     "train": len(train_dataloader.dataset),
@@ -23,18 +24,18 @@ for param in model_ft.parameters():
 
 num_ftrs = model_ft.fc.in_features
 model_ft.fc = nn.Linear(num_ftrs, 1)
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model_ft = model_ft.to(device)
 
 criterion = nn.MSELoss()
 optimizer_ft = optim.Adam(model_ft.fc.parameters(), lr=0.001)
 
+scheduler = StepLR(optimizer_ft, step_size=10, gamma=0.1)
+
 train_loss_history = []
 val_loss_history = []
 
 
-def train_model(model, criterion, optimizer, num_epochs=25):
+def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     for epoch in range(num_epochs):
         print(f"Epoch {epoch}/{num_epochs - 1}")
         print("-" * 10)
@@ -46,7 +47,6 @@ def train_model(model, criterion, optimizer, num_epochs=25):
                 model.eval()
 
             running_loss = 0.0
-
             dataloader = train_dataloader if phase == "train" else val_dataloader
 
             for inputs, labels in dataloader:
@@ -73,11 +73,14 @@ def train_model(model, criterion, optimizer, num_epochs=25):
                 val_loss_history.append(epoch_loss)
 
             print(f"{phase} Loss: {epoch_loss:.4f}")
+            
+        scheduler.step()
+            
 
     return model
 
 
-model_ft = train_model(model_ft, criterion, optimizer_ft, num_epochs=25)
+model_ft = train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=25)
 
 
 
@@ -101,13 +104,10 @@ def plot_training(epoch):
 plot_training(epoch=25)
 
 def save_model_with_timestamp(model, directory="outputs/checkpoints"):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     checkpoint_path = os.path.join(directory, f"resnet_cat_age_{timestamp}.pth")
     torch.save(model.state_dict(), checkpoint_path)
-    print(f"モデルが保存されました: {checkpoint_path}")
+    print(f"モデルが正常に保存されました: {checkpoint_path}")
 
 save_model_with_timestamp(model_ft)
 
