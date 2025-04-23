@@ -9,7 +9,7 @@ model_ft = models.resnet50(pretrained=False)
 num_ftrs = model_ft.fc.in_features
 model_ft.fc = torch.nn.Linear(num_ftrs, 1)
 
-model_ft.load_state_dict(torch.load('outputs/checkpoints/resnet_cat_age_20250201-185504.pth'))
+model_ft.load_state_dict(torch.load('outputs/checkpoints/resnet_cat_age_20250423-151843.pth'))
 model_ft.eval()
 
 device = torch.device('mps')
@@ -29,8 +29,7 @@ def predict_image(img_path, model):
     model.eval()
     with torch.no_grad():
         output = model(image)
-        predicted_age = round(output.item())
-        return predicted_age
+        return round(output.item())
 
 if __name__ == "__main__":
     image_folder = '/Users/akihiro/cat-age-cnn/data/processed-for-cnn'

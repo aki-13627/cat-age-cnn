@@ -6,8 +6,12 @@ import os
 
 
 class CatAgeDataset(torch.utils.data.Dataset):
-    def __init__(self, csv_file, img_dir, transform=None):
-        self.labels_df = pd.read_csv(csv_file)
+    def __init__(self, csv_file, img_dir, transform=None, split="train"):
+        df = pd.read_csv(csv_file)
+
+        # 指定されたsplit（train, val, test）のみを使用
+        self.labels_df = df[df["split"] == split].reset_index(drop=True)
+
         self.img_dir = img_dir
         self.transform = transform
 
@@ -15,13 +19,13 @@ class CatAgeDataset(torch.utils.data.Dataset):
         return len(self.labels_df)
 
     def __getitem__(self, idx):
-        img_name = os.path.join(self.img_dir, self.labels_df.iloc[idx, 0])
-        image = Image.open(img_name)
+        img_path = os.path.join(self.img_dir, self.labels_df.iloc[idx]["filename"])
+        image = Image.open(img_path).convert("RGB")
 
         if self.transform:
             image = self.transform(image)
 
-        age = self.labels_df.iloc[idx, 1]
-        age = torch.tensor(float(age))
+        age = int(self.labels_df.iloc[idx]["age"])
+        age_tensor = torch.tensor(age, dtype=torch.long)  # 分類用に long 型に変換
 
-        return image, age
+        return image, age_tensor

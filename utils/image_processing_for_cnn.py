@@ -13,9 +13,7 @@ if not os.path.exists(output_dir):
 def preprocess_image(image):
     resized_img = cv2.resize(image, image_size)
 
-    normalized_img = resized_img / 255.0
-
-    return normalized_img
+    return resized_img / 255.0
 
 for img_name in os.listdir(input_dir):
     if img_name.endswith(".jpg") or img_name.endswith(".png"):
@@ -27,12 +25,12 @@ for img_name in os.listdir(input_dir):
             continue
 
         processed_img = preprocess_image(img)
-        
+
         output_path = os.path.join(output_dir, img_name)
 
-        success = cv2.imwrite(output_path, (processed_img * 255).astype(np.uint8))
-        
-        if success:
+        if success := cv2.imwrite(
+            output_path, (processed_img * 255).astype(np.uint8)
+        ):
             print(f"画像を保存しました: {output_path}")
         else:
             print(f"画像の保存に失敗しました: {output_path}")

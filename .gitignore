@@ -35,3 +35,4 @@ data/raw/
 data/processed/
 data/processed-for-cnn/
 data/filename-age.csv
+data/new_raw/
