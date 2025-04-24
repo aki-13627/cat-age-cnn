@@ -35,7 +35,7 @@ filename,age,split
 00034_10_00_00_face_0.jpg,10,train
 00035_05_00_00_face_0.jpg,5,train
 00036_05_00_00_face_0.jpg,5,test
-00037_03_00_00_face_0.jpg,3,val
+00037_03_00_00_face_0.jpg,3,train
 00038_02_00_00_face_0.jpg,2,train
 00039_02_00_00jpg_face_0.jpg,2,train
 00040_00_00_52_face_0.jpg,0,test
@@ -66,7 +66,7 @@ filename,age,split
 00064_12_00_00_face_0.jpg,12,train
 00065_13_00_00_face_0.jpg,13,train
 00066_06_00_00_face_0.jpg,6,train
-00068_17_00_00_face_0.jpg,17,val
+00068_17_00_00_face_0.jpg,17,train
 00069_01_00_00_face_0.jpg,1,test
 00070_04_00_00_face_0.jpg,4,train
 00071_08_00_00_face_0.jpg,8,val
@@ -94,7 +94,7 @@ filename,age,split
 00093_04_00_00_face_0.jpg,4,train
 00094_01_00_00_face_0.jpg,1,val
 00095_12_00_00_face_0.jpg,12,val
-00096_12_00_00_face_0.jpg,12,val
+00096_12_00_00_face_0.jpg,12,train
 00097_08_00_00_face_0.jpg,8,train
 00098_05_00_00_face_0.jpg,5,train
 00099_02_00_00_face_0.jpg,2,test
