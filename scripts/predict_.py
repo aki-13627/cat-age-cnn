@@ -42,7 +42,7 @@ if __name__ == "__main__":
     csv_file = '/Users/akihiro/cat-age-cnn/data/filename-age-split.csv'
 
     df = pd.read_csv(csv_file)
-    test_df = df
+    test_df = df[df["split"] == "test"]
     age_dict = dict(zip(test_df["filename"], test_df["age"]))
     target_filenames = set(test_df["filename"])
 
