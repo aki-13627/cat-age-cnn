@@ -10,13 +10,13 @@ import torch.nn as nn
 device = torch.device('mps')
 num_classes = 23
 
-model_ft = models.resnet18(weights=None)
+model_ft = models.resnet50(weights=None)
 num_ftrs = model_ft.fc.in_features
 model_ft.fc = nn.Sequential(
     nn.Dropout(p=0.5),
     nn.Linear(num_ftrs, 23)  # ここは分類数に応じて
 )
-model_ft.load_state_dict(torch.load('outputs/checkpoints/resnet18_cat_age_20250423-162621.pth'))
+model_ft.load_state_dict(torch.load('outputs/checkpoints/resnet50_cat_age_20260103-164612.pth'))
 model_ft = model_ft.to(device)
 model_ft.eval()
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     csv_file = '/Users/akihiro/cat-age-cnn/data/filename-age-split.csv'
 
     df = pd.read_csv(csv_file)
-    test_df = df[df["split"] == "test"]
+    test_df = df[df["split"] == "train"]
     age_dict = dict(zip(test_df["filename"], test_df["age"]))
     target_filenames = set(test_df["filename"])
 

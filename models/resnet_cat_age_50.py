@@ -6,35 +6,42 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
-from data.dataloader import augumented_train_dataloader, augumented_val_dataloader
+from torchvision import models
+from data.dataloader import train_dataloader, val_dataloader
 import os
 import matplotlib.pyplot as plt
-from models.se_resnet import load_pretrained_weights, se_resnet50
 
 device = torch.device("mps")
 
 dataset_sizes = {
-    "train": len(augumented_train_dataloader.dataset),
-    "val": len(augumented_val_dataloader.dataset),
+    "train": len(train_dataloader.dataset),
+    "val": len(val_dataloader.dataset),
 }
 
 num_classes = 23
 
 # === ResNet18 に変更 ===
-model_ft = se_resnet50(num_classes=23).to(device)
+model_ft = models.resnet50(weights="IMAGENET1K_V1")
 for param in model_ft.parameters():
     param.requires_grad = True
-model_ft = load_pretrained_weights(model_ft)
-criterion = nn.CrossEntropyLoss(label_smoothing=0.2)
+
+num_ftrs = model_ft.fc.in_features
+model_ft.fc = nn.Sequential(
+    nn.Dropout(p=0.3),
+    nn.Linear(num_ftrs, 23)
+)
+model_ft = model_ft.to(device)
+
+criterion = nn.CrossEntropyLoss()
 optimizer_ft = optim.Adam(model_ft.parameters(), lr=0.000005)
 scheduler = StepLR(optimizer_ft, step_size=10, gamma=0.98)
 
 train_loss_history = []
 val_loss_history = []
-train_acc_history = []
-val_acc_history = []
+train_mae_history = []
+val_mae_history = []
 
-def train_model(model, criterion, optimizer, scheduler,num_epochs=25):
+def train_model(model, criterion, optimizer, scheduler, num_epochs):
     for epoch in range(num_epochs):
         print(f"Epoch {epoch}/{num_epochs - 1}")
         print("-" * 10)
@@ -42,18 +49,12 @@ def train_model(model, criterion, optimizer, scheduler,num_epochs=25):
         for phase in ["train", "val"]:
             model.train() if phase == "train" else model.eval()
             running_loss = 0.0
-            running_corrects = 0
+            running_mae = 0
 
-            dataloader = augumented_train_dataloader if phase == "train" else augumented_val_dataloader
+            dataloader = train_dataloader if phase == "train" else val_dataloader
             for inputs, labels in dataloader:
-                if inputs.ndim == 5:
-                    B, N, C, H, W = inputs.shape
-                    inputs = inputs.view(B * N, C, H, W)
-                    labels = labels.repeat_interleave(N)
-
                 inputs = inputs.to(device)
                 labels = labels.to(device).long()
-
 
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(phase == "train"):
@@ -65,25 +66,24 @@ def train_model(model, criterion, optimizer, scheduler,num_epochs=25):
                         optimizer.step()
 
                 running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
+                running_mae += torch.sum(torch.abs(preds.float() - labels.data.float()))
 
-            epoch_loss = running_loss / (len(dataloader.dataset) * (N if phase == "train" else 1))
-            epoch_acc = running_corrects.float() / (len(dataloader.dataset) * (N if phase == "train" else 1))
-
+            epoch_loss = running_loss / dataset_sizes[phase]
+            epoch_mae = running_mae / dataset_sizes[phase]
 
             if phase == "train":
                 train_loss_history.append(epoch_loss)
-                train_acc_history.append(epoch_acc.item())
+                train_mae_history.append(epoch_mae.item())
             else:
                 val_loss_history.append(epoch_loss)
-                val_acc_history.append(epoch_acc.item())
+                val_mae_history.append(epoch_mae.item())
 
-            print(f"{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}")
+            print(f"{phase} Loss: {epoch_loss:.4f} MAE: {epoch_mae:.4f}")
 
         scheduler.step()
     return model
 
-model_ft = train_model(model_ft, criterion, optimizer_ft,  scheduler, num_epochs=300)
+model_ft = train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=150)
 
 def plot_training():
     timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -96,33 +96,22 @@ def plot_training():
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.plot(train_acc_history, label="Train Acc")
-    plt.plot(val_acc_history, label="Val Acc")
+    plt.plot(train_mae_history, label="Train MAE")
+    plt.plot(val_mae_history, label="Val MAE")
     plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
+    plt.ylabel("MAE")
     plt.legend()
 
-    filename = f"outputs/logs/training_curve_se_{timestamp}.png"
+    filename = f"outputs/logs/training_curve_resnet50_{timestamp}.png"
     plt.savefig(filename)
     plt.show()
     print(f"Training curve saved: {filename}")
 
 plot_training()
 
-# --- 学習完了後に追加 ---
-from models.se_resnet import SEBlock
-
-# 各 SEBlock の重みを表示
-for name, module in model_ft.named_modules():
-    if isinstance(module, SEBlock):
-        w = module.fc2.weight.data.cpu().numpy()
-        print(f"SEBlock at '{name}': fc2.weight shape={w.shape}")
-        # 必要なら要素の統計量も出力
-        print(f"  mean={w.mean():.4f}, std={w.std():.4f}, min={w.min():.4f}, max={w.max():.4f}")
-
 def save_model_with_timestamp(model, directory="outputs/checkpoints"):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    checkpoint_path = os.path.join(directory, f"resnet18_cat_age_se_{timestamp}.pth")
+    checkpoint_path = os.path.join(directory, f"resnet50_cat_age_{timestamp}.pth")
     torch.save(model.state_dict(), checkpoint_path)
     print(f"モデルが正常に保存されました: {checkpoint_path}")
 

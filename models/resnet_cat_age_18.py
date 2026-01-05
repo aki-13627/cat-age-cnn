@@ -27,21 +27,21 @@ for param in model_ft.parameters():
 
 num_ftrs = model_ft.fc.in_features
 model_ft.fc = nn.Sequential(
-    nn.Dropout(p=0.5),
+    nn.Dropout(p=0.3),
     nn.Linear(num_ftrs, 23)
 )
 model_ft = model_ft.to(device)
 
 criterion = nn.CrossEntropyLoss()
-optimizer_ft = optim.Adam(model_ft.parameters(), lr=0.0001)
-scheduler = StepLR(optimizer_ft, step_size=2, gamma=0.95)
+optimizer_ft = optim.Adam(model_ft.parameters(), lr=0.00001)
+scheduler = StepLR(optimizer_ft, step_size=10, gamma=0.98)
 
 train_loss_history = []
 val_loss_history = []
-train_acc_history = []
-val_acc_history = []
+train_mae_history = []
+val_mae_history = []
 
-def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
+def train_model(model, criterion, optimizer, scheduler, num_epochs=150):
     for epoch in range(num_epochs):
         print(f"Epoch {epoch}/{num_epochs - 1}")
         print("-" * 10)
@@ -49,7 +49,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         for phase in ["train", "val"]:
             model.train() if phase == "train" else model.eval()
             running_loss = 0.0
-            running_corrects = 0
+            running_mae = 0
 
             dataloader = train_dataloader if phase == "train" else val_dataloader
             for inputs, labels in dataloader:
@@ -66,24 +66,24 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                         optimizer.step()
 
                 running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
+                running_mae += torch.sum(torch.abs(preds.float() - labels.data.float()))
 
             epoch_loss = running_loss / dataset_sizes[phase]
-            epoch_acc = running_corrects.float() / dataset_sizes[phase]
+            epoch_mae = running_mae / dataset_sizes[phase]
 
             if phase == "train":
                 train_loss_history.append(epoch_loss)
-                train_acc_history.append(epoch_acc.item())
+                train_mae_history.append(epoch_mae.item())
             else:
                 val_loss_history.append(epoch_loss)
-                val_acc_history.append(epoch_acc.item())
+                val_mae_history.append(epoch_mae.item())
 
-            print(f"{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}")
+            print(f"{phase} Loss: {epoch_loss:.4f} MAE: {epoch_mae:.4f}")
 
         scheduler.step()
     return model
 
-model_ft = train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=25)
+model_ft = train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=150)
 
 def plot_training():
     timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -96,10 +96,10 @@ def plot_training():
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.plot(train_acc_history, label="Train Acc")
-    plt.plot(val_acc_history, label="Val Acc")
+    plt.plot(train_mae_history, label="Train MAE")
+    plt.plot(val_mae_history, label="Val MAE")
     plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
+    plt.ylabel("MAE")
     plt.legend()
 
     filename = f"outputs/logs/training_curve_{timestamp}.png"
