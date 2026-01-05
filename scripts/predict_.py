@@ -42,7 +42,7 @@ if __name__ == "__main__":
     csv_file = '/Users/akihiro/cat-age-cnn/data/filename-age-split.csv'
 
     df = pd.read_csv(csv_file)
-    test_df = df[df["split"] == "train"]
+    test_df = df[df["split"] == "val"]
     age_dict = dict(zip(test_df["filename"], test_df["age"]))
     target_filenames = set(test_df["filename"])
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         actual_age = age_dict.get(img_name)
         predicted_age = predict_image(img_path, model_ft)
 
-        if actual_age is not None:
+        if actual_age is not None and actual_age is 0:
             error = abs(predicted_age - actual_age)
             errors.append(error)
             results.append([img_name, actual_age, predicted_age, error])
