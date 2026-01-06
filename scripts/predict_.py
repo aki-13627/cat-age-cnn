@@ -60,7 +60,7 @@ if __name__ == "__main__":
         actual_age = age_dict.get(img_name)
         predicted_age = predict_image(img_path, model_ft)
 
-        if actual_age is not None and actual_age is 0:
+        if actual_age is not None:
             error = abs(predicted_age - actual_age)
             errors.append(error)
             results.append([img_name, actual_age, predicted_age, error])

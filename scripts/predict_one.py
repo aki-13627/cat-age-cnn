@@ -6,7 +6,7 @@ from torchvision import models, transforms
 # =========================
 # 入力画像のパスを指定
 # =========================
-image_path = "data/any_to_predict/スクリーンショット 2026-01-05 17.08.30.png"
+image_path = "data/any_to_predict/スクリーンショット 2025-04-23 17.57.42.png"
 
 # =========================
 # モデルの定義と読み込み
@@ -19,7 +19,7 @@ model.fc = nn.Sequential(
     nn.Dropout(p=0.5),
     nn.Linear(model.fc.in_features, num_classes)
 )
-model.load_state_dict(torch.load('outputs/checkpoints/resnet50_cat_age_20260103-164612.pth'))
+model.load_state_dict(torch.load('outputs/checkpoints/resnet50_cat_age_20260103-164612.pth', weights_only=False))
 model = model.to(device)
 model.eval()
 
