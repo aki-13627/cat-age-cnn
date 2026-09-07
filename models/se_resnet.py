@@ -2,7 +2,7 @@ import torch.nn as nn
 from torchvision.models.resnet import Bottleneck, ResNet, resnet50
 from .se_block import SEBlock
 
-# === ResNet50用: Bottleneckを継承 ===
+
 class SEBottleneck(Bottleneck):
     """
     ResNet50, 101, 152用のSEブロック付きBottleneck

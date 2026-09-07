@@ -11,6 +11,7 @@ from models.se_resnet import se_resnet50, load_pretrained_weights, SEBlock
 from data.dataloader import train_dataloader, val_dataloader
 import os
 import matplotlib.pyplot as plt
+import copy
 
 
 device = torch.device("mps")
@@ -70,7 +71,13 @@ def make_rank_label(batch_labels, num_outputs):
     return rank_labels
 
 
-def train_model(model, criterion, optimizer, scheduler, num_epochs):
+def train_model(model, criterion, optimizer, scheduler, num_epochs, patience):
+    
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_loss = float('inf')
+    
+    counter = 0
+    
     for epoch in range(num_epochs):
         print(f"Epoch {epoch}/{num_epochs - 1}")
         print("-" * 10)
@@ -120,30 +127,44 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs):
             else:
                 val_loss_history.append(epoch_loss)
                 val_mae_history.append(epoch_mae.item())
+                
+                if epoch_loss < best_loss:
+                    best_loss = epoch_loss
+                    best_model_wts = copy.deepcopy(model.state_dict())
+                    counter = 0
+                    print(f"  New Best Val Loss: {best_loss:.4f} (Saved)")
+                else:
+                    counter += 1
+                    print(f"  EarlyStopping counter: {counter} / {patience}")
 
             print(f"{phase} Loss: {epoch_loss:.4f} MAE: {epoch_mae:.4f}")
 
         scheduler.step()
-
+        
+        if counter >= patience:
+            print(f"\nEarly stopping triggered! (No improvement for {patience} epochs)")
+            break
+    
+    model.load_state_dict(best_model_wts)
     return model
 
 
-model_ft = train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=100)
+model_ft = train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=120, patience=15)
 
 
 def plot_training():
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
-    plt.plot(train_loss_history, label="Train Loss")
-    plt.plot(val_loss_history, label="Val Loss")
+    plt.plot(train_loss_history, label="訓練データの損失")
+    plt.plot(val_loss_history, label="評価データの損失")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
 
     plt.subplot(1, 2, 2)
-    plt.plot(train_mae_history, label="Train MAE")
-    plt.plot(val_mae_history, label="Val MAE")
+    plt.plot(train_mae_history, label="訓練データMAE")
+    plt.plot(val_mae_history, label="評価データMAE")
     plt.xlabel("Epoch")
     plt.ylabel("MAE")
     plt.legend()
